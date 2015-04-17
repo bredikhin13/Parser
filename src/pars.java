@@ -9,7 +9,8 @@ public class pars  {
     public pars(String s) {
         chars = new ArrayDeque<>();
         for (char c : s.toCharArray()) {
-            chars.add(c);
+            if(c != ' ')
+                chars.add(c);
         }
         chars.add('&');//специальный символ, обозначающий конец выражения
     }
