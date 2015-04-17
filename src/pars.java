@@ -3,23 +3,23 @@ import java.util.*;
 /**
  * Created by User on 15.04.2015.
  */
-public class pars {
-    private Queue<Character> chars;
+public class pars  {
+    private Queue<Character> chars; //очередь, в которой хранитс€ наше выражение
 
     public pars(String s) {
         chars = new ArrayDeque<>();
         for (char c : s.toCharArray()) {
             chars.add(c);
         }
-        chars.add('&');
+        chars.add('&');//специальный символ, обозначающий конец выражени€
     }
 
     public Double calc(int r) {
         int rpb = r;
         char tmp;
-        double result;
-        result = nud(chars.poll());
+        double result = 0;
         try {
+            result = nud(chars.poll());
             while (priority(chars.peek()) > rpb) {
                 tmp = chars.poll();
                 result = operators(result, tmp);
@@ -27,17 +27,22 @@ public class pars {
             if (priority(chars.peek()) == -1) {
                 chars.poll();
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } catch (Exception e){
+            System.err.println(e.getMessage());
         }
         return result;
     }
 
-    private boolean isDigit(char c) {
+    private boolean isDigit(char c) { //проверка, €вл€етс€ ли данный символ цифрой
         return (c >= '0' && c <= '9');
     }
 
-    public double nud(char c) {
+    private double nud(char c) { //функци€, определ€юща€ назначение символа в начале выражени€
+        int minusFlag = 1;// унарный минус
+        if(c == '-'){
+           minusFlag= -1;
+            c = chars.poll();
+        }
         switch (c) {
             case '(':
                 return calc(0);
@@ -48,18 +53,18 @@ public class pars {
                         tmp += chars.poll();
                     }
                     if (isDigit(c)) {
-                        return Double.parseDouble(tmp);
+                        return minusFlag * Double.parseDouble(tmp);
                     } else {
-                        return functions(tmp);
+                        return minusFlag * functions(tmp);
                     }
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
         }
-        return -1;
+        return 0;
     }
 
-    public double priority(char ch) {
+    private double priority(char ch) { // функци€, возвращающа€ приоритет операции
         switch (ch) {
             case ('&'):
                 return -2;
@@ -82,7 +87,7 @@ public class pars {
         }
     }
 
-    public double functions(String s) throws Exception {
+    private double functions(String s) throws Exception {
         switch (s) {
             case "sqrt":
                 chars.poll();
@@ -90,12 +95,15 @@ public class pars {
             case "abs":
                 chars.poll();
                 return Math.abs(calc(0));
+            case "min":
+                chars.poll();
+                return getMin();
             default:
-                throw new Exception("Unknown function");
+                throw new Exception("Unknown function: " + s);
         }
     }
 
-    public double operators(double m, char ch) throws Exception {
+    private double operators(double m, char ch) throws Exception {
         double result = 0;
         switch (ch) {
             case ('+'):
@@ -118,8 +126,35 @@ public class pars {
                 result = m;
                 break;
             default:
-                throw new Exception("Unknown operator");
+                throw new Exception("Unknown operator: "+ ch);
         }
         return result;
     }
+
+    private double getMin() throws Exception{
+        String tmp = "";
+        ArrayList<Double> arr = new ArrayList<>();
+        Double result;
+        while (chars.peek() != ')'){
+            if(chars.peek()!=','){
+                if(isDigit(chars.peek())) {
+                    tmp += chars.poll();
+                }
+                else {
+                    throw new Exception("Unexpected token:" + chars.poll());
+                }
+            }
+            else {
+                arr.add(Double.parseDouble(tmp));
+                chars.poll();
+                tmp = "";
+            }
+        }
+        result = Double.parseDouble(tmp);
+        for(Double d: arr){
+            if(d<result) result = d;
+        }
+        return result;
+    }
+
 }
